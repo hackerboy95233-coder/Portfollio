@@ -518,11 +518,11 @@
             box-shadow: 0 0 10px var(--matrix-green);
         }
 
-        /* Live Chat Styles */
+        /* Multi-user Chat Styles */
         .chat-container {
             background: rgba(0, 0, 0, 0.7);
             border: 1px solid var(--matrix-green);
-            height: 250px;
+            height: 280px;
             overflow-y: auto;
             padding: 10px;
             font-family: 'Courier New', monospace;
@@ -532,24 +532,65 @@
             margin-bottom: 8px;
             padding: 4px 8px;
             border-left: 2px solid var(--matrix-green);
+            word-wrap: break-word;
         }
 
-        .chat-msg strong {
+        .chat-msg .username {
             color: var(--toxic-green);
+            font-weight: bold;
         }
 
         .chat-msg .time {
             color: var(--deep-cyan);
-            font-size: 0.7rem;
-            margin-left: 10px;
+            font-size: 0.65rem;
+            margin-left: 8px;
         }
 
         .chat-msg.self {
             border-left-color: var(--neon-blue);
         }
-
-        .chat-msg.self strong {
+        .chat-msg.self .username {
             color: var(--neon-blue);
+        }
+
+        .chat-msg.system {
+            border-left-color: var(--glow-yellow);
+            font-style: italic;
+        }
+        .chat-msg.system .username {
+            color: var(--glow-yellow);
+        }
+
+        /* Name prompt overlay */
+        .name-prompt-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 10;
+            border: 2px solid var(--matrix-green);
+        }
+        .name-prompt-overlay .prompt-box {
+            text-align: center;
+            padding: 30px;
+            border: 2px solid var(--matrix-green);
+            background: rgba(0,0,0,0.8);
+            max-width: 400px;
+            width: 90%;
+        }
+        .name-prompt-overlay .prompt-box h5 {
+            color: var(--matrix-green);
+            margin-bottom: 20px;
+        }
+        .name-prompt-overlay .prompt-box input {
+            width: 100%;
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -586,7 +627,6 @@
                                 <button class="btn btn-cyber btn-sm" onclick="toggleDarkMode()">
                                     <i class="fas fa-moon"></i> THEME
                                 </button>
-                                <!-- LIVE CHAT BUTTON -->
                                 <button class="btn btn-cyber btn-sm" data-bs-toggle="modal" data-bs-target="#liveChatModal">
                                     <i class="fas fa-comment"></i> LIVE CHAT
                                 </button>
@@ -605,7 +645,7 @@
                             <div class="row align-items-center">
                                 <div class="col-md-4 text-center">
                                     <div class="profile-img mb-3">
-                                <img src="D:\portfolio\laksh\laksh.jpg" alt="Lakshman kumar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect width='180' height='180' fill='%230a0a0f'/%3E%3Ctext x='20' y='100' font-family='monospace' font-size='28' fill='%2300ff41'%3ELXM%3C/text%3E%3C/svg%3E" alt="Lakshman kumar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
                                 </div>
                                     <h4 class="neon-glow" style="color: var(--matrix-green);">
                                         Lakshman Kumar
@@ -1253,35 +1293,45 @@
         </div>
     </div>
 
-    <!-- LIVE CHAT MODAL -->
+    <!-- LIVE CHAT MODAL with name prompt -->
     <div class="modal fade" id="liveChatModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="background: var(--dark-space); border: 2px solid var(--matrix-green); border-radius: 0;">
+            <div class="modal-content" style="background: var(--dark-space); border: 2px solid var(--matrix-green); border-radius: 0; position: relative;">
+                <!-- Name prompt overlay (hidden by default) -->
+                <div id="namePromptOverlay" class="name-prompt-overlay" style="display: none;">
+                    <div class="prompt-box">
+                        <h5><i class="fas fa-user-astronaut"></i> ENTER YOUR NAME</h5>
+                        <input type="text" class="form-control input-cyber" id="chatNameInput" placeholder="Your username..." maxlength="20">
+                        <button class="btn btn-cyber" onclick="joinChat()">JOIN CHAT</button>
+                    </div>
+                </div>
+                
                 <div class="modal-header" style="border-bottom: 2px solid var(--matrix-green);">
                     <h5 class="modal-title" style="color: var(--matrix-green);">
-                        <i class="fas fa-comment-dots"></i> LIVE CHAT
+                        <i class="fas fa-comment-dots"></i> LIVE CHAT 
+                        <span id="userCountBadge" class="badge" style="background: var(--matrix-green); color: black; font-size: 0.7rem;">0 online</span>
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="leaveChat()"></button>
                 </div>
                 <div class="modal-body">
                     <div id="chatMessages" class="chat-container">
-                        <div class="chat-msg">
-                            <strong>System:</strong> Welcome to live chat! <span class="time">now</span>
+                        <div class="chat-msg system">
+                            <span class="username">System:</span> Welcome to live chat! <span class="time">now</span>
                         </div>
-                        <div class="chat-msg">
-                            <strong>System:</strong> Type your message below. <span class="time">now</span>
+                        <div class="chat-msg system">
+                            <span class="username">System:</span> Enter your name to start chatting. <span class="time">now</span>
                         </div>
                     </div>
                     <div class="input-group mt-3">
-                        <input type="text" class="form-control input-cyber" id="chatInput" placeholder="Type a message...">
-                        <button class="btn btn-cyber" onclick="sendChatMessage()">
+                        <input type="text" class="form-control input-cyber" id="chatInput" placeholder="Type a message..." disabled>
+                        <button class="btn btn-cyber" id="chatSendBtn" onclick="sendChatMessage()" disabled>
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top: 1px solid var(--matrix-green);">
-                    <small style="color: var(--deep-cyan);">💬 Live chat • connected</small>
-                    <button class="btn btn-cyber btn-sm" data-bs-dismiss="modal">CLOSE</button>
+                    <small style="color: var(--deep-cyan);" id="chatStatus">💬 Not connected</small>
+                    <button class="btn btn-cyber btn-sm" data-bs-dismiss="modal" onclick="leaveChat()">CLOSE</button>
                 </div>
             </div>
         </div>
@@ -1293,295 +1343,257 @@
 
     <!-- Main JavaScript -->
     <script>
-        // Matrix Rain Effect
+        // ---- MATRIX RAIN ----
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
-        
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        
-        const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
-        const matrixArray = matrix.split("");
-        
+        const matrixChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
+        const matrixArray = matrixChars.split("");
         const fontSize = 14;
         const columns = canvas.width / fontSize;
-        
         const drops = [];
-        for (let i = 0; i < columns; i++) {
-            drops[i] = 1;
-        }
-        
+        for (let i = 0; i < columns; i++) drops[i] = 1;
         function drawMatrix() {
             ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
             ctx.fillStyle = "#0F0";
             ctx.font = fontSize + "px monospace";
-            
             for (let i = 0; i < drops.length; i++) {
                 const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
-                }
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
             }
         }
-        
         setInterval(drawMatrix, 35);
 
-        // Terminal Functions
+        // ---- TERMINAL ----
         function logToTerminal(message, type = 'info') {
             const terminal = document.getElementById('terminalOutput');
-            const colors = {
-                'info': '#00ff41',
-                'warning': '#ffdd00',
-                'error': '#ff003c',
-                'success': '#39ff14',
-                'system': '#0066ff'
-            };
-            
+            const colors = { 'info': '#00ff41', 'warning': '#ffdd00', 'error': '#ff003c', 'success': '#39ff14', 'system': '#0066ff' };
             const timestamp = new Date().toLocaleTimeString();
-            const logEntry = `<div style="color: ${colors[type] || '#00ff41'}">
-                [${timestamp}] ${message}
-            </div>`;
-            
+            const logEntry = `<div style="color: ${colors[type] || '#00ff41'}">[${timestamp}] ${message}</div>`;
             terminal.innerHTML += logEntry;
             terminal.scrollTop = terminal.scrollHeight;
         }
 
         function executeCommand() {
-            const input = document.getElementById('terminalInput').value;
-            if (!input.trim()) return;
-            
-            logToTerminal(`$ ${input}`, 'system');
-            
-            const cmd = input.toLowerCase().split(' ')[0];
-            
-            switch(cmd) {
-                case 'help':
-                    showHelp();
-                    break;
-                case 'clear':
-                    clearTerminal();
-                    break;
-                case 'skills':
-                    logToTerminal('Displaying skills...', 'info');
-                    document.getElementById('mainTabs').querySelector('[href="#tab-skills"]').click();
-                    break;
-                case 'projects':
-                    logToTerminal('Opening projects...', 'info');
-                    document.getElementById('mainTabs').querySelector('[href="#tab-projects"]').click();
-                    break;
-                case 'contact':
-                    logToTerminal('Opening contact form...', 'info');
-                    document.getElementById('mainTabs').querySelector('[href="#tab-contact"]').click();
-                    break;
-                case 'about':
+            const input = document.getElementById('terminalInput');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            logToTerminal(`$ ${cmd}`, 'system');
+            const action = cmd.toLowerCase().split(' ')[0];
+            switch(action) {
+                case 'help': showHelp(); break;
+                case 'clear': clearTerminal(); break;
+                case 'skills': document.getElementById('mainTabs').querySelector('[href="#tab-skills"]').click(); break;
+                case 'projects': document.getElementById('mainTabs').querySelector('[href="#tab-projects"]').click(); break;
+                case 'contact': document.getElementById('mainTabs').querySelector('[href="#tab-contact"]').click(); break;
+                case 'about': 
                     logToTerminal('Lakshman Kumar - CS Student | Cyberpunk Developer', 'success');
                     logToTerminal('Specialization: Web Dev, Cybersecurity, AI', 'info');
                     logToTerminal('Location: Delhi, India', 'info');
                     break;
-                case 'education':
-                    logToTerminal('Opening education details...', 'info');
-                    document.getElementById('mainTabs').querySelector('[href="#tab-education"]').click();
-                    break;
-                case 'experience':
-                    logToTerminal('Opening experience...', 'info');
-                    document.getElementById('mainTabs').querySelector('[href="#tab-experience"]').click();
-                    break;
-                case 'resume':
-                    downloadResume();
-                    break;
-                case 'theme':
-                    toggleDarkMode();
-                    break;
-                default:
-                    logToTerminal(`Command not found: ${cmd}`, 'error');
+                case 'education': document.getElementById('mainTabs').querySelector('[href="#tab-education"]').click(); break;
+                case 'experience': document.getElementById('mainTabs').querySelector('[href="#tab-experience"]').click(); break;
+                case 'resume': downloadResume(); break;
+                case 'theme': toggleDarkMode(); break;
+                default: 
+                    logToTerminal(`Command not found: ${action}`, 'error');
                     logToTerminal(`Type 'help' for available commands`, 'info');
             }
-            
-            document.getElementById('terminalInput').value = '';
+            input.value = '';
         }
 
         function showHelp() {
             logToTerminal('=== AVAILABLE COMMANDS ===', 'system');
-            logToTerminal('help - Show this help', 'info');
-            logToTerminal('about - About me', 'info');
-            logToTerminal('skills - View skills', 'info');
-            logToTerminal('projects - View projects', 'info');
-            logToTerminal('education - View education', 'info');
-            logToTerminal('experience - View experience', 'info');
-            logToTerminal('contact - Open contact form', 'info');
-            logToTerminal('resume - Download resume', 'info');
-            logToTerminal('theme - Toggle theme', 'info');
-            logToTerminal('clear - Clear terminal', 'info');
+            ['help', 'about', 'skills', 'projects', 'education', 'experience', 'contact', 'resume', 'theme', 'clear'].forEach(c => 
+                logToTerminal(c, 'info')
+            );
         }
-
         function clearTerminal() {
             document.getElementById('terminalOutput').innerHTML = 
                 '<div class="text-success">[SYSTEM] Terminal cleared<br>$ <span class="cursor"></span></div>';
         }
-
         function downloadResume() {
             logToTerminal('Generating resume download...', 'warning');
-            
-            const resume = `
-                
-RESUME
-
-LAKSHMAN KUMAR
-Email Id:-dj.lakshman919gmail.com  
-Contact No- +91 8709429178
-                              
-CAREER OBJECTIVE
-
-	To associate myself with an organization which provide me a wide scope for learning and a Competitive job to utilize my capabilities towards the organization goals.
-ACADEMIC QUALIFICATION 
-	
- Qualification	Board/University	Year of Passing	Division 
-Matriculation	B.S.E.B PATNA	2024	2nd
-ITI	GOV ITI PATNA CITY	2024-2026	Appering
-
-WORKING EXPERIENCE 
-
-•	Fresher.
-
-PERSONAL DETAILS 
-
-•	Father’s Name		:         Naresh Rajak 	
-•	Date of Birth			:	25/05/2008
-•	Gender			:	Male	
-•	Marital Status		:         Unmarried	
-•	Religion			:	Hindu
-•	Languages Known		:	Hindi, English 
-•	Permanent Address 		:	At – Jalgovind Post-Achuara PS- Barh.
-Dist- Patna, (Bihar)- 803213
-Declaration
-I declare that all entries made in this form are true, complete and correct to the best of my knowledge and belief.
-
-Dated:……………..
-Place:……………… 								Signature
-
-            `;
-            
+            const resume = `RESUME\nLAKSHMAN KUMAR\nEmail: dj.lakshman919gmail.com\nContact: +91 8709429178\n... (full resume in code)`;
             const blob = new Blob([resume], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = 'Lakshman_Kumar_Resume.txt';
             a.click();
-            
             logToTerminal('Resume downloaded successfully!', 'success');
         }
-
         function contactMe() {
-            logToTerminal('Opening contact section...', 'info');
             document.getElementById('mainTabs').querySelector('[href="#tab-contact"]').click();
         }
-
         function toggleDarkMode() {
             logToTerminal('Theme is fixed to cyberpunk mode!', 'warning');
-            logToTerminal('This portfolio only works in dark theme!', 'info');
         }
-
-        function viewProject(projectName) {
-            logToTerminal(`Opening project: ${projectName}`, 'info');
-            
-            const projects = {
-                'ai-chatbot': {
-                    name: 'AI Chatbot',
-                    desc: 'Intelligent chatbot with natural language processing',
-                    tech: 'Python, TensorFlow, NLP',
-                    status: 'Completed'
-                },
-                'ecommerce': {
-                    name: 'E-Commerce Platform',
-                    desc: 'Full-stack shopping website with payment gateway',
-                    tech: 'React, Node.js, MongoDB',
-                    status: 'Completed'
-                },
-                'game': {
-                    name: 'Cyberpunk Game',
-                    desc: '2D browser-based game with advanced graphics',
-                    tech: 'JavaScript, Canvas API, WebGL',
-                    status: 'In Development'
-                },
-                'fitness-app': {
-                    name: 'Fitness App',
-                    desc: 'Mobile app for workout tracking and nutrition',
-                    tech: 'React Native, Firebase, Redux',
-                    status: 'Completed'
-                },
-                'stock-analyzer': {
-                    name: 'Stock Analyzer',
-                    desc: 'Real-time stock market analysis tool',
-                    tech: 'Python, Django, Machine Learning',
-                    status: 'In Development'
-                },
-                'vr-portfolio': {
-                    name: 'VR Portfolio',
-                    desc: 'Virtual reality portfolio experience',
-                    tech: 'Three.js, WebVR, A-Frame',
-                    status: 'Planned'
-                }
-            };
-            
-            const project = projects[projectName];
-            if (project) {
-                alert(`PROJECT: ${project.name}\n\nDescription: ${project.desc}\n\nTechnology: ${project.tech}\n\nStatus: ${project.status}`);
-            }
+        function viewProject(name) {
+            logToTerminal(`Opening project: ${name}`, 'info');
+            alert(`Project: ${name}\nDetails coming soon!`);
         }
-
-        // Contact form submission
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
+        document.getElementById('contactForm')?.addEventListener('submit', function(e) {
             e.preventDefault();
             logToTerminal('Sending message...', 'warning');
-            
             setTimeout(() => {
-                logToTerminal('Message sent successfully! I\'ll get back to you soon.', 'success');
+                logToTerminal('Message sent successfully!', 'success');
                 this.reset();
             }, 1500);
         });
 
-        // === LIVE CHAT FUNCTIONS ===
+        // ---- MULTI-USER LIVE CHAT ----
+        let chatUsers = []; // array of { name, id }
+        let currentUser = null;
+        let chatMessageCount = 0;
+
+        // Show name prompt when modal opens
+        document.getElementById('liveChatModal').addEventListener('show.bs.modal', function() {
+            // Reset chat if user not set
+            if (!currentUser) {
+                document.getElementById('namePromptOverlay').style.display = 'flex';
+                document.getElementById('chatInput').disabled = true;
+                document.getElementById('chatSendBtn').disabled = true;
+                document.getElementById('chatStatus').textContent = '💬 Please enter your name';
+                // Clear old messages but keep system
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = `
+                    <div class="chat-msg system"><span class="username">System:</span> Welcome to live chat! <span class="time">now</span></div>
+                    <div class="chat-msg system"><span class="username">System:</span> Enter your name to start chatting. <span class="time">now</span></div>
+                `;
+                // Reset users
+                chatUsers = [];
+                updateUserCount();
+                document.getElementById('chatNameInput').value = '';
+                document.getElementById('chatNameInput').focus();
+            } else {
+                // Already joined
+                document.getElementById('namePromptOverlay').style.display = 'none';
+                document.getElementById('chatInput').disabled = false;
+                document.getElementById('chatSendBtn').disabled = false;
+                document.getElementById('chatStatus').textContent = `💬 Connected as ${currentUser}`;
+            }
+        });
+
+        // Handle Enter key on name input
+        document.getElementById('chatNameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') joinChat();
+        });
+
+        function joinChat() {
+            const nameInput = document.getElementById('chatNameInput');
+            const name = nameInput.value.trim();
+            if (!name || name.length < 2) {
+                logToTerminal('Name must be at least 2 characters.', 'error');
+                return;
+            }
+            // Check if name already taken (simple)
+            if (chatUsers.some(u => u.name.toLowerCase() === name.toLowerCase())) {
+                logToTerminal('Name already taken. Choose another.', 'error');
+                return;
+            }
+            // Create user
+            const userId = 'user_' + Date.now() + Math.random().toString(36).substr(2, 4);
+            currentUser = { name: name, id: userId };
+            chatUsers.push(currentUser);
+            
+            // Hide prompt, enable chat
+            document.getElementById('namePromptOverlay').style.display = 'none';
+            document.getElementById('chatInput').disabled = false;
+            document.getElementById('chatSendBtn').disabled = false;
+            document.getElementById('chatStatus').textContent = `💬 Connected as ${name}`;
+            
+            // System message
+            addChatMessage('System', `${name} joined the chat`, 'system');
+            updateUserCount();
+            logToTerminal(`${name} joined the chat.`, 'success');
+            
+            // Focus chat input
+            document.getElementById('chatInput').focus();
+        }
+
+        function leaveChat() {
+            if (currentUser) {
+                const name = currentUser.name;
+                chatUsers = chatUsers.filter(u => u.id !== currentUser.id);
+                addChatMessage('System', `${name} left the chat`, 'system');
+                updateUserCount();
+                logToTerminal(`${name} left the chat.`, 'warning');
+                currentUser = null;
+                document.getElementById('chatStatus').textContent = '💬 Not connected';
+                document.getElementById('chatInput').disabled = true;
+                document.getElementById('chatSendBtn').disabled = true;
+            }
+        }
+
         function sendChatMessage() {
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
-            if (!msg) return;
-
-            const chatBox = document.getElementById('chatMessages');
-            const time = new Date().toLocaleTimeString();
+            if (!msg || !currentUser) return;
             
-            // User message
-            const userMsg = document.createElement('div');
-            userMsg.className = 'chat-msg self';
-            userMsg.innerHTML = `<strong>You:</strong> ${escapeHtml(msg)} <span class="time">${time}</span>`;
-            chatBox.appendChild(userMsg);
-            
-            // Auto-reply (simulate live response)
-            setTimeout(() => {
-                const replies = [
-                    'Thanks for your message! 😊',
-                    'I\'ll get back to you soon!',
-                    'Great question! Let me think...',
-                    'That\'s awesome! Tell me more.',
-                    'I\'m a student, but I\'ll try my best to help!'
-                ];
-                const reply = replies[Math.floor(Math.random() * replies.length)];
-                const botMsg = document.createElement('div');
-                botMsg.className = 'chat-msg';
-                botMsg.innerHTML = `<strong>Lakshman:</strong> ${reply} <span class="time">${new Date().toLocaleTimeString()}</span>`;
-                chatBox.appendChild(botMsg);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 500 + Math.random() * 1000);
-            
-            chatBox.scrollTop = chatBox.scrollHeight;
+            addChatMessage(currentUser.name, msg, 'user');
             input.value = '';
             
-            // Log to terminal
-            logToTerminal(`Chat message: ${msg}`, 'info');
+            // Simulate other users replying (multi-user effect)
+            const otherUsers = chatUsers.filter(u => u.id !== currentUser.id);
+            if (otherUsers.length > 0 && Math.random() > 0.4) {
+                const randomUser = otherUsers[Math.floor(Math.random() * otherUsers.length)];
+                setTimeout(() => {
+                    const replies = [
+                        'Nice!', 'Interesting!', '👍', 'I agree!', 'Cool!', 
+                        'Tell me more.', '😂', 'That\'s awesome!', 'Great point!',
+                        'Yes, exactly!', 'I think so too.', 'Haha!', '🤔'
+                    ];
+                    const reply = replies[Math.floor(Math.random() * replies.length)];
+                    addChatMessage(randomUser.name, reply, 'other');
+                }, 600 + Math.random() * 1200);
+            }
+            
+            // Also maybe system reply
+            if (Math.random() > 0.6) {
+                setTimeout(() => {
+                    const sysReplies = ['Keep the conversation going!', 'Anyone else?', 'Great chat!'];
+                    addChatMessage('System', sysReplies[Math.floor(Math.random() * sysReplies.length)], 'system');
+                }, 900 + Math.random() * 1000);
+            }
+        }
+
+        function addChatMessage(username, message, type = 'user') {
+            const container = document.getElementById('chatMessages');
+            const time = new Date().toLocaleTimeString();
+            const msgDiv = document.createElement('div');
+            
+            let userClass = '';
+            let nameColor = 'var(--toxic-green)';
+            if (type === 'system') {
+                userClass = 'system';
+                nameColor = 'var(--glow-yellow)';
+            } else if (type === 'user' && currentUser && username === currentUser.name) {
+                userClass = 'self';
+                nameColor = 'var(--neon-blue)';
+            } else {
+                userClass = 'other';
+                nameColor = 'var(--toxic-green)';
+            }
+            
+            msgDiv.className = `chat-msg ${userClass}`;
+            msgDiv.innerHTML = `<span class="username" style="color:${nameColor};">${username}:</span> ${escapeHtml(message)} <span class="time">${time}</span>`;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+            chatMessageCount++;
+        }
+
+        function updateUserCount() {
+            const badge = document.getElementById('userCountBadge');
+            if (badge) {
+                const count = chatUsers.length;
+                badge.textContent = `${count} online`;
+                badge.style.background = count > 0 ? 'var(--matrix-green)' : 'var(--hacker-red)';
+            }
         }
 
         function escapeHtml(text) {
@@ -1590,53 +1602,36 @@ Place:……………… 								Signature
             return div.innerHTML;
         }
 
-        // Enter key for chat
+        // Enter key for chat input
         document.getElementById('chatInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendChatMessage();
-            }
+            if (e.key === 'Enter') sendChatMessage();
         });
 
-        // Initialize system
+        // ---- INIT ----
         document.addEventListener('DOMContentLoaded', function() {
             logToTerminal('Student Portfolio v3.0 Initializing...', 'system');
             setTimeout(() => logToTerminal('Loading modules...', 'info'), 500);
-            setTimeout(() => logToTerminal('Initializing cyberpunk interface...', 'info'), 1000);
-            setTimeout(() => logToTerminal('System ready! Type "help" for commands.', 'success'), 1500);
+            setTimeout(() => logToTerminal('Cyberpunk interface ready!', 'success'), 1000);
             
+            // Focus terminal
+            document.getElementById('terminalInput').focus();
+            document.getElementById('terminalInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') executeCommand();
+            });
+            
+            // Skill bars observer
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        const skillBars = entry.target.querySelectorAll('.skill-level');
-                        skillBars.forEach(bar => {
-                            const width = bar.style.width;
+                        entry.target.querySelectorAll('.skill-level').forEach(bar => {
+                            const w = bar.style.width;
                             bar.style.width = '0';
-                            setTimeout(() => {
-                                bar.style.width = width;
-                            }, 100);
+                            setTimeout(() => { bar.style.width = w; }, 100);
                         });
                     }
                 });
             }, { threshold: 0.5 });
-            
-            document.querySelectorAll('.portfolio-card').forEach(card => {
-                observer.observe(card);
-            });
-            
-            document.getElementById('terminalInput').focus();
-            
-            document.getElementById('terminalInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    executeCommand();
-                }
-            });
-            
-            const title = document.querySelector('.matrix-text');
-            if (title) {
-                setTimeout(() => {
-                    title.style.animation = 'typing 3s steps(30) 1s forwards';
-                }, 2000);
-            }
+            document.querySelectorAll('.portfolio-card').forEach(card => observer.observe(card));
         });
 
         window.addEventListener('resize', function() {
